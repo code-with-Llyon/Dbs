@@ -1,0 +1,36 @@
+{% extends "base.html" %} {% block content %}
+<h2 class="mb-3">Document Checklist</h2>
+
+<div class="row g-3">
+  {% for key, doc in docs.items() %}
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">{{ key.replace('_',' ').title() }}</h5>
+
+        {% if doc %}
+        <p class="text-success fw-bold">✅ Uploaded</p>
+        <p class="small text-muted">File: {{ doc.filename }}</p>
+        {% if doc.expiry %}
+        <p class="small">Expiry: {{ doc.expiry }}</p>
+        {% endif %} {% else %}
+        <p class="text-danger fw-bold">❌ Not uploaded</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="mt-4">
+  {% if docs.passport and docs.irp_card and docs.proof_of_address %}
+  <div class="alert alert-success">
+    🎉 All required documents are ready for GNIB/IRP appointment.
+  </div>
+  {% else %}
+  <div class="alert alert-warning">
+    ⚠️ Please upload all required documents before booking your appointment.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
