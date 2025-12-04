@@ -8,6 +8,7 @@ app.secret_key = "gnib-school-project-key"
 
 # adding the upload logic and determining the file type
 # that is acceptable and the maximum size it should take.
+# Upload Settings refrence:  file uploads pattern.  Flask Docs 
 UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"pdf", "jpg", "jpeg", "png"}
 MAX_FILE_SIZE_MB = 5
