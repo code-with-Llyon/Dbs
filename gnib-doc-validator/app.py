@@ -59,6 +59,8 @@ DOC_MAP = {
 }
 
 # checking if the file extension is allowed
-def allowed_file(filename):
-     return '.' in filename and \
-            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def allowed_file(filename: str) -> bool:
+    if "." not in filename:
+        return False
+    ext = filename.rsplit(".", 1)[1].lower()
+    return ext in ALLOWED_EXTENSIONS
