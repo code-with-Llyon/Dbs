@@ -64,3 +64,14 @@ def allowed_file(filename: str) -> bool:
         return False
     ext = filename.rsplit(".", 1)[1].lower()
     return ext in ALLOWED_EXTENSIONS
+
+
+def get_required_docs(purpose: str, category: str):
+    return DOC_MAP.get(purpose, {}).get(category, [])
+
+#created sessions to keep track of the selected purpose, category and uploaded documents
+
+def ensure_session_store():
+    session.setdefault("purpose", None)
+    session.setdefault("category", None)
+    session.setdefault("uploaded_docs", {})
