@@ -15,3 +15,45 @@ MAX_FILE_SIZE_MB = 5
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# This dictionary is based on the project structure and was 
+#generated and structured by ChatGPT with the help of the project description.
+
+DOC_MAP = {
+    "study": {
+        "masters": [
+            "passport",
+            "college_letter",
+            "fees_proof",
+            "scholarship_proof",
+            "course_start_proof",
+            "insurance",
+        ],
+        "undergraduate": [
+            "passport",
+            "college_letter",
+            "fees_proof",
+            "scholarship_proof",
+            "insurance",
+        ],
+        "english_language": [
+            "passport",
+            "college_letter",
+            "fees_proof",
+            "insurance",
+        ],
+    },
+    "work": {
+        "employment_permit": [
+            "passport",
+            "employment_letter",
+            "payslip",
+            "insurance",
+        ],
+        "graduate_1g": [
+            "passport",
+            "college_letter",
+            "insurance",
+        ],
+    },
+}
