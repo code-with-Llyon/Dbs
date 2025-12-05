@@ -153,3 +153,11 @@ if errors:
 # creating a session to store purpose and category.
 session["purpose"] = purpose
 session["category"] = category
+
+#saving files securely to upload folder 
+
+UPLOAD_FOLDER = '/path/to/the/uploads'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
