@@ -128,3 +128,17 @@ def upload():
             file.seek(0)
             if size_bytes > MAX_FILE_SIZE_MB * 1024 * 1024:
                 errors.append(f"File must be under {MAX_FILE_SIZE_MB} MB.")
+
+
+# Validate expiry date for passport
+        
+        if doc_type in ["passport"]:
+            if not expiry_date:
+                errors.append("Expiry date is required for Passport.")
+            else:
+                try:
+                    exp = datetime.strptime(expiry_date, "%Y-%m-%d").date()
+                    if exp <= datetime.today().date():
+                        errors.append("Passport appears to be expired.")
+                except ValueError:
+                    errors.append("Invalid expiry date format (use YYYY-MM-DD).")
