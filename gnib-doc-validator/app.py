@@ -176,8 +176,13 @@ safe_name = secure_filename(file.filename)
     # If GET request, simply render the upload form
     return render_template("upload.html")
 
-#creating the routing for checklist
-@app.route('/hello/')
-@app.route('/hello/<name>')
-def hello(name=None):
-    return render_template('hello.html', person=name)
+#modified the checklist rout to better suit the project.
+
+@app.route("/checklist")
+def checklist():
+    ensure_session_store()
+    purpose = session.get("purpose")
+    category = session.get("category")
+    uploaded_docs = session.get("uploaded_docs", {})
+
+
