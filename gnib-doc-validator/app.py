@@ -160,3 +160,18 @@ safe_name = secure_filename(file.filename)
         final_name = f"{doc_type}_{int(datetime.now().timestamp())}_{safe_name}"
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], final_name)
         file.save(filepath)
+
+#storing uploaded file in a session 
+    uploaded_docs = session["uploaded_docs"]
+        uploaded_docs[doc_type] = {
+            "filename": final_name,
+            "expiry": expiry_date,
+            "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        session["uploaded_docs"] = uploaded_docs
+
+        flash(f"{doc_type.replace('_', ' ').title()} uploaded successfully!", "success")
+        return redirect(url_for("checklist"))
+
+    # If GET request, simply render the upload form
+    return render_template("upload.html")
