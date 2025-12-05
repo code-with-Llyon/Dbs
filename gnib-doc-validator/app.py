@@ -97,3 +97,13 @@ def upload():
         file = request.files.get("document")
 
         errors = []
+
+       # Validating purpose & category 
+        
+        if not purpose or purpose not in DOC_MAP:
+            errors.append("Please select a valid purpose (study or work).")
+        if not category or category not in DOC_MAP.get(purpose, {}):
+            errors.append("Please select a valid category for that purpose.")
+
+        required_docs = get_required_docs(purpose, category)
+
