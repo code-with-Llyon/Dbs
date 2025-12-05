@@ -107,3 +107,9 @@ def upload():
 
         required_docs = get_required_docs(purpose, category)
 
+ #  Validating  document type
+        if not doc_type:
+            errors.append("Please select a document type.")
+        elif required_docs and doc_type not in required_docs:
+            errors.append("Selected document is not required for this category.")
+
