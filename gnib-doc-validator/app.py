@@ -76,12 +76,12 @@ def ensure_session_store():
     session.setdefault("category", None)
     session.setdefault("uploaded_docs", {})
 
-#creating routiong 
-@app.route('/')
+#Remodified the rout to fit my project 
+@app.route("/")
 def index():
-    return 'Index Page'
+    ensure_session_store()
+    return render_template("index.html")
 
-@app.route('/hello')
-def hello():
-    return 'Hello, World'
+
+
 
