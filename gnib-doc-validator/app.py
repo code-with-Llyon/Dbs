@@ -75,3 +75,13 @@ def ensure_session_store():
     session.setdefault("purpose", None)
     session.setdefault("category", None)
     session.setdefault("uploaded_docs", {})
+
+#creating routiong 
+@app.route('/')
+def index():
+    return 'Index Page'
+
+@app.route('/hello')
+def hello():
+    return 'Hello, World'
+
