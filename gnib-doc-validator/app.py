@@ -76,31 +76,24 @@ def ensure_session_store():
     session.setdefault("category", None)
     session.setdefault("uploaded_docs", {})
 
-#Remodified the rout to fit my project 
+#Remodified the rout to fit my project
+
 @app.route("/")
 def index():
     ensure_session_store()
     return render_template("index.html")
 
-#routing the upload document  
-#using template
+#routing the upload document , using template
 
-@app.route('/', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('download_file', name=filename))
-    return '''
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+    ensure_session_store()
 
+    if request.method == "POST":
+        purpose = request.form.get("purpose")
+        category = request.form.get("category")
+        doc_type = request.form.get("doc_type")
+        expiry_date = request.form.get("expiry_date")  # may be empty for some docs
+        file = request.files.get("document")
+
+        errors = []
