@@ -142,3 +142,10 @@ def upload():
                         errors.append("Passport appears to be expired.")
                 except ValueError:
                     errors.append("Invalid expiry date format (use YYYY-MM-DD).")
+
+# if there is an error, shos the error message and redirect.
+
+if errors:
+            for msg in errors:
+                flash(msg, "danger")  
+            return redirect(url_for("upload"))
