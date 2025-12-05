@@ -156,8 +156,7 @@ session["category"] = category
 
 #saving files securely to upload folder 
 
-UPLOAD_FOLDER = '/path/to/the/uploads'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
-
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+safe_name = secure_filename(file.filename)
+        final_name = f"{doc_type}_{int(datetime.now().timestamp())}_{safe_name}"
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], final_name)
+        file.save(filepath)
