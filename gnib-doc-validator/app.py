@@ -149,3 +149,7 @@ if errors:
             for msg in errors:
                 flash(msg, "danger")  
             return redirect(url_for("upload"))
+
+# creating a session to store purpose and category.
+session["purpose"] = purpose
+session["category"] = category
