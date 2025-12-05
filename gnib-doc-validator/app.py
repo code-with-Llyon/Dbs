@@ -112,9 +112,19 @@ def upload():
             errors.append("Please select a document type.")
         elif required_docs and doc_type not in required_docs:
             errors.append("Selected document is not required for this category.")
+   
 
    # Validating  file presence & extension
         if not file or file.filename == "":
             errors.append("Please upload a file.")
         elif not allowed_file(file.filename):
             errors.append("Only PDF, JPG, JPEG, PNG files are allowed.")
+
+ #  Validating file size 
+        
+        if file and file.filename:
+            file.seek(0, os.SEEK_END)
+            size_bytes = file.tell()
+            file.seek(0)
+            if size_bytes > MAX_FILE_SIZE_MB * 1024 * 1024:
+                errors.append(f"File must be under {MAX_FILE_SIZE_MB} MB.")
