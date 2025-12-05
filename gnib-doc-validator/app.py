@@ -113,3 +113,8 @@ def upload():
         elif required_docs and doc_type not in required_docs:
             errors.append("Selected document is not required for this category.")
 
+   # Validating  file presence & extension
+        if not file or file.filename == "":
+            errors.append("Please upload a file.")
+        elif not allowed_file(file.filename):
+            errors.append("Only PDF, JPG, JPEG, PNG files are allowed.")
