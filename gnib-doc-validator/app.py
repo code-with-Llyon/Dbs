@@ -185,4 +185,30 @@ def checklist():
     category = session.get("category")
     uploaded_docs = session.get("uploaded_docs", {})
 
+# created the required list
+# if purpose and category evaluates to true, 
+# we add then inside the required list
+required_docs = []
+    if purpose and category:
+        required_docs = get_required_docs(purpose, category)
 
+# created the status list
+# intrating through the list and appending into the status list
+  status_list = []
+    for doc in required_docs:
+        info = uploaded_docs.get(doc)
+        status_list.append({
+            "doc_type": doc,
+            "uploaded": bool(info),
+            "info": info,
+        })
+
+all_ready = bool(required_docs) and all(item["uploaded"] for item in status_list)   
+
+return render_template(
+        "checklist.html",
+        purpose=purpose,
+        category=category,
+        required_docs=status_list,
+        all_ready=all_ready,
+    )    
