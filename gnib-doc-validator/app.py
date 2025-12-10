@@ -212,3 +212,46 @@ return render_template(
         required_docs=status_list,
         all_ready=all_ready,
     )    
+
+
+# API Route for JS Validation (optional, for front-end use)
+
+@app.route("/api/validate", methods=["POST"])
+def api_validate():
+    ensure_session_store()
+    data = request.get_json() or {}
+
+    purpose = data.get("purpose")
+    category = data.get("category")
+    doc_type = data.get("doc_type")
+    expiry_date = data.get("expiry_date")
+
+    errors = []
+
+    if not purpose or purpose not in DOC_MAP:
+        errors.append("Purpose is invalid.")
+    if not category or category not in DOC_MAP.get(purpose, {}):
+        errors.append("Category invalid.")
+
+    required_docs = get_required_docs(purpose, category)
+
+    if not doc_type:
+        errors.append("Document type required.")
+    elif required_docs and doc_type not in required_docs:
+        errors.append("Document type not required for this category.")
+
+    if doc_type == "passport":
+        if not expiry_date:
+            errors.append("Expiry date required for passport.")
+        else:
+            try:
+                exp = datetime.strptime(expiry_date, "%Y-%m-%d").date()
+                if exp <= datetime.today().date():
+                    errors.append("Passport appears expired.")
+            except ValueError:
+                errors.append("Invalid expiry date format.")
+
+    if errors:
+        return jsonify({"ok": False, "errors": errors}), 400
+
+    return jsonify({"ok": True, "message": "Valid data"})
