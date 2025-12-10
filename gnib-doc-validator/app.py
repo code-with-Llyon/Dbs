@@ -255,3 +255,8 @@ def api_validate():
         return jsonify({"ok": False, "errors": errors}), 400
 
     return jsonify({"ok": True, "message": "Valid data"})
+
+
+# Run the Flask app in debug mode (from Flask quickstart pattern)
+if __name__ == "__main__":
+    app.run(debug=True)
