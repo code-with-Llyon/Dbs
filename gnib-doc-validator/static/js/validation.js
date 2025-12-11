@@ -35,10 +35,6 @@ const DOC_MAP = {
   work: {
     employment_permit: ["passport","employment_letter","payslip","insurance"],
     graduate_1g: ["passport","college_letter","insurance"]
-  },
-  renewal: {
-    renew_study: ["passport","gnib_card","college_letter","fees_proof","insurance","address_proof"],
-    renew_work: ["passport","gnib_card","employment_letter","payslip","insurance","address_proof"]
   }
 };
 
@@ -51,10 +47,6 @@ const categoryOptions = {
   work: [
     ["employment_permit", "Employment Permit Holder (Stamp 1)"],
     ["graduate_1g", "Graduate / Stamp 1G"]
-  ],
-  renewal: [
-    ["renew_study", "Renew Study Permission (Stamp 2)"],
-    ["renew_work", "Renew Work Permission (Stamp 1 etc.)"]
   ]
 };
 
