@@ -2,7 +2,7 @@
 <h2 class="mb-3">Document Checklist</h2>
 
 <div class="row g-3">
-  {% for key, doc in docs.items() %}
+  {% for key, doc in required_docs.items() %}
   <div class="col-md-4">
     <div class="card h-100 shadow-sm">
       <div class="card-body">
@@ -23,7 +23,8 @@
 </div>
 
 <div class="mt-4">
-  {% if docs.passport and docs.irp_card and docs.proof_of_address %}
+  {% if required_docs.passport and required_docs.irp_card and
+  required_docs.proof_of_address %}
   <div class="alert alert-success">
     🎉 All required documents are ready for GNIB/IRP appointment.
   </div>
