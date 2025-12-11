@@ -1,19 +1,24 @@
 {% extends "base.html" %} {% block content %}
+
 <h2 class="mb-3">Document Checklist</h2>
 
 <div class="row g-3">
-  {% for key, doc in required_docs.items() %}
+  {# required_docs is a LIST of items like: {"doc_type": "passport", "uploaded":
+  True/False, "info": {...}} #} {% for item in required_docs %}
   <div class="col-md-4">
     <div class="card h-100 shadow-sm">
       <div class="card-body">
-        <h5 class="card-title">{{ key.replace('_',' ').title() }}</h5>
+        <h5 class="card-title">
+          {{ item.doc_type.replace('_', ' ').title() }}
+        </h5>
 
-        {% if doc %}
+        {% if item.uploaded %}
         <p class="text-success fw-bold">✅ Uploaded</p>
-        <p class="small text-muted">File: {{ doc.filename }}</p>
-        {% if doc.expiry %}
-        <p class="small">Expiry: {{ doc.expiry }}</p>
-        {% endif %} {% else %}
+        {% if item.info %}
+        <p class="small text-muted">File: {{ item.info.filename }}</p>
+        {% if item.info.expiry %}
+        <p class="small">Expiry: {{ item.info.expiry }}</p>
+        {% endif %} {% endif %} {% else %}
         <p class="text-danger fw-bold">❌ Not uploaded</p>
         {% endif %}
       </div>
@@ -23,10 +28,10 @@
 </div>
 
 <div class="mt-4">
-  {% if required_docs.passport and required_docs.irp_card and
-  required_docs.proof_of_address %}
+  {# all_ready is already calculated in Python: all_ready = bool(required_docs)
+  and all(item["uploaded"] for item in status_list) #} {% if all_ready %}
   <div class="alert alert-success">
-    🎉 All required documents are ready for GNIB/IRP appointment.
+    🎉 All required documents are ready for your appointment.
   </div>
   {% else %}
   <div class="alert alert-warning">
@@ -34,4 +39,5 @@
   </div>
   {% endif %}
 </div>
+
 {% endblock %}
