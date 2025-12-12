@@ -3,6 +3,8 @@ import os
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import sqlite3
+import string
+import secrets
 
 app = Flask(__name__)
 app.secret_key = "gnib-school-project-key"
