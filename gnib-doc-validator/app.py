@@ -61,6 +61,40 @@ DOC_MAP = {
 
 OPTIONAL_DOCS = {"scholarship_proof"}
 
+# SQLite setup (Python sqlite3 docs)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "gnib_uploads.db")
+
+
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row  # so we can access columns by name
+    return conn
+
+
+@app.before_first_request
+def init_db():
+    """Create uploads table if it does not exist."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS uploads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            purpose TEXT NOT NULL,
+            category TEXT NOT NULL,
+            doc_type TEXT NOT NULL,
+            filename TEXT NOT NULL,
+            expiry_date TEXT,
+            uploaded_at TEXT NOT NULL
+        )
+        """
+    )
+    conn.commit()
+    conn.close()
+
+
 # checking if the file extension is allowed
 
 
