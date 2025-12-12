@@ -58,6 +58,8 @@ DOC_MAP = {
     },
 }
 
+OPTIONAL_DOCS = {"scholarship_proof"}
+
 # checking if the file extension is allowed
 
 
@@ -94,15 +96,14 @@ def index():
 def upload():
     ensure_session_store()
 
+    purpose = session.get("purpose")
+    category = session.get("category")
+    uploaded_docs = session.get("uploaded_docs", {})
+    errors = []
+
     if request.method == "POST":
         purpose = request.form.get("purpose")
         category = request.form.get("category")
-        doc_type = request.form.get("doc_type")
-        # may be empty for some docs
-        expiry_date = request.form.get("expiry_date")
-        file = request.files.get("document")
-
-        errors = []
 
         # Validating purpose & category
         if not purpose or purpose not in DOC_MAP:
@@ -112,70 +113,111 @@ def upload():
 
         required_docs = get_required_docs(purpose, category)
 
-        # Validating  document type
-        if not doc_type:
-            errors.append("Please select a document type.")
-        elif required_docs and doc_type not in required_docs:
-            errors.append(
-                "Selected document is not required for this category.")
+        # Validate each required doc's file
+        for doc_type in required_docs:
+            field_name = f"document_{doc_type}"
+            file = request.files.get(field_name)
+            expiry_field = f"expiry_{doc_type}"
+            expiry_date = request.form.get(expiry_field)
 
-        # Validating  file presence & extension
-        if not file or file.filename == "":
-            errors.append("Please upload a file.")
-        elif not allowed_file(file.filename):
-            errors.append("Only PDF, JPG, JPEG, PNG files are allowed.")
+            label = doc_type.replace("_", " ").title()
 
-        # Validating file size
-        if file and file.filename:
+            if not file or file.filename == "":
+                if doc_type in OPTIONAL_DOCS:
+                    continue
+                errors.append(f"Please upload a file for {label}.")
+                continue
+
+            if not allowed_file(file.filename):
+                errors.append(
+                    f"{label}: Only PDF, JPG, JPEG, PNG files are allowed.")
+                continue
+
             file.seek(0, os.SEEK_END)
             size_bytes = file.tell()
             file.seek(0)
             if size_bytes > MAX_FILE_SIZE_MB * 1024 * 1024:
-                errors.append(f"File must be under {MAX_FILE_SIZE_MB} MB.")
+                errors.append(
+                    f"{label}: File must be under {MAX_FILE_SIZE_MB} MB.")
+                continue
 
-        # Validate expiry date for passport
-        if doc_type in ["passport"]:
-            if not expiry_date:
-                errors.append("Expiry date is required for Passport.")
-            else:
-                try:
-                    exp = datetime.strptime(expiry_date, "%Y-%m-%d").date()
-                    if exp <= datetime.today().date():
-                        errors.append("Passport appears to be expired.")
-                except ValueError:
-                    errors.append(
-                        "Invalid expiry date format (use YYYY-MM-DD).")
+            # Passport expiry validation
+            if doc_type == "passport":
+                if not expiry_date:
+                    errors.append("Expiry date is required for Passport.")
+                else:
+                    try:
+                        exp = datetime.strptime(expiry_date, "%Y-%m-%d").date()
+                        if exp <= datetime.today().date():
+                            errors.append("Passport appears to be expired.")
+                    except ValueError:
+                        errors.append(
+                            "Invalid expiry date for Passport (use YYYY-MM-DD).")
 
-        # if there is an error, shos the error message and redirect.
+        # If there are errors, show them and stay on the same page
         if errors:
             for msg in errors:
                 flash(msg, "danger")
-            return redirect(url_for("upload"))
+        else:
+            # Save purpose & category in session
+            session["purpose"] = purpose
+            session["category"] = category
 
-        # creating a session to store purpose and category.
-        session["purpose"] = purpose
-        session["category"] = category
+            # Save all files
+            uploaded_docs = session.get("uploaded_docs", {})
+            required_docs = get_required_docs(purpose, category)
 
-        # saving files securely to upload folder
-        safe_name = secure_filename(file.filename)
-        final_name = f"{doc_type}_{int(datetime.now().timestamp())}_{safe_name}"
-        filepath = os.path.join(app.config["UPLOAD_FOLDER"], final_name)
-        file.save(filepath)
+            for doc_type in required_docs:
+                field_name = f"document_{doc_type}"
+                file = request.files.get(field_name)
+                if not file or file.filename == "":
+                    continue  # already handled by errors, but just in case
 
-        # storing uploaded file in a session
-        uploaded_docs = session["uploaded_docs"]
-        uploaded_docs[doc_type] = {
-            "filename": final_name,
-            "expiry": expiry_date,
-            "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        }
-        session["uploaded_docs"] = uploaded_docs
+                safe_name = secure_filename(file.filename)
+                final_name = f"{doc_type}_{int(datetime.now().timestamp())}_{safe_name}"
+                filepath = os.path.join(
+                    app.config["UPLOAD_FOLDER"], final_name)
+                file.save(filepath)
 
-        flash(f"{doc_type.replace('_', ' ').title()} uploaded successfully!", "success")
-        return redirect(url_for("checklist"))
+                expiry_field = f"expiry_{doc_type}"
+                expiry_date = request.form.get(expiry_field)
 
-    # If GET request, simply render the upload form
-    return render_template("upload.html")
+                uploaded_docs[doc_type] = {
+                    "filename": final_name,
+                    "expiry": expiry_date,
+                    "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                }
+
+            session["uploaded_docs"] = uploaded_docs
+            flash("All selected documents uploaded successfully!", "success")
+
+    # Build checklist status for right-hand panel
+    uploaded_docs = session.get("uploaded_docs", {})
+    purpose = session.get("purpose")
+    category = session.get("category")
+
+    status_list = []
+    required_docs = []
+    if purpose and category:
+        required_docs = get_required_docs(purpose, category)
+        for doc in required_docs:
+            info = uploaded_docs.get(doc)
+            status_list.append({
+                "doc_type": doc,
+                "uploaded": bool(info),
+                "info": info,
+            })
+
+    all_ready = bool(required_docs) and all(
+        item["uploaded"] for item in status_list)
+
+    return render_template(
+        "upload.html",
+        purpose=purpose,
+        category=category,
+        required_docs=status_list,
+        all_ready=all_ready,
+    )
 
 # modified the checklist rout to better suit the project.
 
