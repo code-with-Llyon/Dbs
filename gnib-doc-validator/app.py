@@ -223,6 +223,30 @@ def upload():
                     "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 }
 
+                # logging each uploaded document into SQLite
+            conn = get_db_connection()
+            cur = conn.cursor()
+            for doc_type, info in uploaded_docs.items():
+
+                if doc_type not in required_docs:
+                    continue
+                cur.execute(
+                    """
+                    INSERT INTO uploads (purpose, category, doc_type, filename, expiry_date, uploaded_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        purpose,
+                        category,
+                        doc_type,
+                        info["filename"],
+                        info.get("expiry"),
+                        info["uploaded_at"],
+                    ),
+                )
+            conn.commit()
+            conn.close()
+
             session["uploaded_docs"] = uploaded_docs
             flash("All selected documents uploaded successfully!", "success")
 
