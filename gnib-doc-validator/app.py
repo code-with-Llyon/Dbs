@@ -71,7 +71,7 @@ DB_PATH = os.path.join(BASE_DIR, "gnib_uploads.db")
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # so we can access columns by name
+    conn.row_factory = sqlite3.Row
     return conn
 
 
@@ -84,11 +84,13 @@ def init_db():
         """
         CREATE TABLE IF NOT EXISTS uploads (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            application_code TEXT NOT NULL,
             purpose TEXT NOT NULL,
             category TEXT NOT NULL,
             doc_type TEXT NOT NULL,
             filename TEXT NOT NULL,
             expiry_date TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
             uploaded_at TEXT NOT NULL
         )
         """
@@ -96,6 +98,11 @@ def init_db():
     conn.commit()
     conn.close()
 
+
+def generate_application_code(length: int = 8) -> str:
+    """Generate a simple numeric reference code like 8-digit GNIB code."""
+    digits = string.digits
+    return "".join(secrets.choice(digits) for _ in range(length))
 
 # checking if the file extension is allowed
 
