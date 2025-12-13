@@ -385,6 +385,37 @@ def admin_login():
 
     return render_template("admin_login.html")
 
+# check if admin is logged in
+
+
+def require_admin():
+    # just returns True/False, routes will redirect if not logged in
+    return bool(session.get("admin_logged_in"))
+
+
+# admin dashboard route
+@app.route("/admin")
+def admin_dashboard():
+    # if not logged in, send them to login page
+    if not require_admin():
+        return redirect(url_for("admin_login"))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # pulling all uploads and list them in descending order.
+    cur.execute("""
+        SELECT id, application_code, purpose, category,
+               doc_type, filename, expiry_date, status, uploaded_at
+        FROM uploads
+        ORDER BY uploaded_at DESC
+    """)
+    uploads = cur.fetchall()
+    conn.close()
+
+    # this template will loop over "uploads" and show them in a table
+    return render_template("admin_dashboard.html", uploads=uploads)
+
 
 # API Route for JS Validation (optional, for front-end use)
 # client-side validation pattern here is custom for this project,
