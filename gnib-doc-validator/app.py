@@ -75,7 +75,6 @@ def get_db_connection():
     return conn
 
 
-@app.before_first_request
 def init_db():
     """Create uploads table if it does not exist."""
     conn = get_db_connection()
