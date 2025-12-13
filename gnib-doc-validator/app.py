@@ -207,15 +207,25 @@ def upload():
             session["purpose"] = purpose
             session["category"] = category
 
+            # Generate application code for this batch
+            application_code = session.get("application_code")
+            if not application_code:
+                application_code = generate_application_code()
+                session["application_code"] = application_code
+
             # Save all files
             uploaded_docs = session.get("uploaded_docs", {})
             required_docs = get_required_docs(purpose, category)
+
+            conn = get_db_connection()
+            cur = conn.cursor()
 
             for doc_type in required_docs:
                 field_name = f"document_{doc_type}"
                 file = request.files.get(field_name)
                 if not file or file.filename == "":
-                    continue  # already handled by errors, but just in case
+                    # optional or missing doc, skip saving
+                    continue
 
                 safe_name = secure_filename(file.filename)
                 final_name = f"{doc_type}_{int(datetime.now().timestamp())}_{safe_name}"
@@ -232,33 +242,34 @@ def upload():
                     "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 }
 
-                # logging each uploaded document into SQLite
-            conn = get_db_connection()
-            cur = conn.cursor()
-            for doc_type, info in uploaded_docs.items():
-
-                if doc_type not in required_docs:
-                    continue
+                # Insert into SQLite with status 'pending'
                 cur.execute(
                     """
-                    INSERT INTO uploads (purpose, category, doc_type, filename, expiry_date, uploaded_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO uploads
+                    (application_code, purpose, category, doc_type, filename, expiry_date, status, uploaded_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
+                        application_code,
                         purpose,
                         category,
                         doc_type,
-                        info["filename"],
-                        info.get("expiry"),
-                        info["uploaded_at"],
+                        final_name,
+                        expiry_date,
+                        "pending",
+                        uploaded_docs[doc_type]["uploaded_at"],
                     ),
                 )
+
             conn.commit()
             conn.close()
 
             session["uploaded_docs"] = uploaded_docs
-            flash("All selected documents uploaded successfully!", "success")
-
+            flash(
+                f"All selected documents uploaded successfully! "
+                f"Your GNIB reference code is: {application_code}",
+                "success",
+            )
     # Build checklist status for right-hand panel
     uploaded_docs = session.get("uploaded_docs", {})
     purpose = session.get("purpose")
