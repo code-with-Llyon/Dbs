@@ -11,7 +11,8 @@ app.secret_key = "gnib-school-project-key"
 
 # adding the upload logic and determining the file type
 # that is acceptable and the maximum size it should take.
-# Upload Settings refrence:  file uploads pattern.  Flask Docs
+# Upload Settings reference:  file uploads pattern.  (Flask docs upload pattern:
+# https://flask.palletsprojects.com/en/latest/patterns/fileuploads/)
 UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"pdf", "jpg", "jpeg", "png"}
 MAX_FILE_SIZE_MB = 5
@@ -21,7 +22,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # This dictionary is based on the project structure and was
 # generated and structured by ChatGPT with the help of the project description.
-
+# It is the "server truth" for which documents are required for each purpose / category.
 DOC_MAP = {
     "study": {
         "masters": [
@@ -61,15 +62,18 @@ DOC_MAP = {
     },
 }
 
+# some docs like scholarship_proof are optional, so we don't force upload errors for them
 OPTIONAL_DOCS = {"scholarship_proof"}
 
-# SQLite setup (Python sqlite3 docs)
+# SQLite setup (Python sqlite3 docs pattern:
+# https://docs.python.org/3/library/sqlite3.html)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "gnib_uploads.db")
 
 
 def get_db_connection():
+    """simple helper to open sqlite connection with row factory (so we can use row['col'])"""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
@@ -99,13 +103,15 @@ def init_db():
 
 
 def generate_application_code(length: int = 8) -> str:
-    """Generate a simple numeric reference code like 8-digit GNIB code."""
+    """Generate a simple numeric reference code like 8-digit GNIB code.
+    (pattern inspired by Python secrets docs:
+    https://docs.python.org/3/library/secrets.html)
+    """
     digits = string.digits
     return "".join(secrets.choice(digits) for _ in range(length))
 
+
 # checking if the file extension is allowed
-
-
 def allowed_file(filename: str) -> bool:
     if "." not in filename:
         return False
@@ -114,31 +120,31 @@ def allowed_file(filename: str) -> bool:
 
 
 def get_required_docs(purpose: str, category: str):
+    """small helper to safely read required docs from DOC_MAP"""
     return DOC_MAP.get(purpose, {}).get(category, [])
 
+
 # created sessions to keep track of the selected purpose, category and uploaded documents
-
-
 def ensure_session_store():
+    # keeping default values in session so we don't get KeyError later
     session.setdefault("purpose", None)
     session.setdefault("category", None)
     session.setdefault("uploaded_docs", {})
 
-# Remodified the rout to fit my project
 
-
+# Remodified the route to fit my project
 @app.route("/")
 def index():
     ensure_session_store()
     return render_template("index.html")
 
-# routing the upload document , using template
 
-
+# routing the upload document, using template
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     ensure_session_store()
 
+    # pulling whatever we already have in the session
     purpose = session.get("purpose")
     category = session.get("category")
     uploaded_docs = session.get("uploaded_docs", {})
@@ -157,6 +163,8 @@ def upload():
         required_docs = get_required_docs(purpose, category)
 
         # Validate each required doc's file
+        # this logic is aligned with the dynamic inputs generated in validation.js
+        # where each file field is like: name="document_passport" etc.
         for doc_type in required_docs:
             field_name = f"document_{doc_type}"
             file = request.files.get(field_name)
@@ -165,23 +173,29 @@ def upload():
 
             label = doc_type.replace("_", " ").title()
 
+            # if file is missing
             if not file or file.filename == "":
                 if doc_type in OPTIONAL_DOCS:
+                    # optional doc can be skipped
                     continue
                 errors.append(f"Please upload a file for {label}.")
                 continue
 
+            # checking extension
             if not allowed_file(file.filename):
                 errors.append(
-                    f"{label}: Only PDF, JPG, JPEG, PNG files are allowed.")
+                    f"{label}: Only PDF, JPG, JPEG, PNG files are allowed."
+                )
                 continue
 
+            # checking file size by seeking to end and back
             file.seek(0, os.SEEK_END)
             size_bytes = file.tell()
             file.seek(0)
             if size_bytes > MAX_FILE_SIZE_MB * 1024 * 1024:
                 errors.append(
-                    f"{label}: File must be under {MAX_FILE_SIZE_MB} MB.")
+                    f"{label}: File must be under {MAX_FILE_SIZE_MB} MB."
+                )
                 continue
 
             # Passport expiry validation
@@ -195,7 +209,8 @@ def upload():
                             errors.append("Passport appears to be expired.")
                     except ValueError:
                         errors.append(
-                            "Invalid expiry date for Passport (use YYYY-MM-DD).")
+                            "Invalid expiry date for Passport (use YYYY-MM-DD)."
+                        )
 
         # If there are errors, show them and stay on the same page
         if errors:
@@ -207,6 +222,7 @@ def upload():
             session["category"] = category
 
             # Generate application code for this batch
+            # this is stored in session so all uploads share the same reference
             application_code = session.get("application_code")
             if not application_code:
                 application_code = generate_application_code()
@@ -235,13 +251,15 @@ def upload():
                 expiry_field = f"expiry_{doc_type}"
                 expiry_date = request.form.get(expiry_field)
 
+                uploaded_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 uploaded_docs[doc_type] = {
                     "filename": final_name,
                     "expiry": expiry_date,
-                    "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "uploaded_at": uploaded_at,
                 }
 
                 # Insert into SQLite with status 'pending'
+                # basic INSERT pattern follows sqlite3 doc examples
                 cur.execute(
                     """
                     INSERT INTO uploads
@@ -256,7 +274,7 @@ def upload():
                         final_name,
                         expiry_date,
                         "pending",
-                        uploaded_docs[doc_type]["uploaded_at"],
+                        uploaded_at,
                     ),
                 )
 
@@ -269,6 +287,7 @@ def upload():
                 f"Your GNIB reference code is: {application_code}",
                 "success",
             )
+
     # Build checklist status for right-hand panel
     uploaded_docs = session.get("uploaded_docs", {})
     purpose = session.get("purpose")
@@ -287,7 +306,8 @@ def upload():
             })
 
     all_ready = bool(required_docs) and all(
-        item["uploaded"] for item in status_list)
+        item["uploaded"] for item in status_list
+    )
 
     return render_template(
         "upload.html",
@@ -297,9 +317,8 @@ def upload():
         all_ready=all_ready,
     )
 
+
 # modified the checklist rout to better suit the project.
-
-
 @app.route("/checklist")
 def checklist():
     ensure_session_store()
@@ -326,7 +345,8 @@ def checklist():
         })
 
     all_ready = bool(required_docs) and all(
-        item["uploaded"] for item in status_list)
+        item["uploaded"] for item in status_list
+    )
 
     return render_template(
         "checklist.html",
@@ -336,9 +356,10 @@ def checklist():
         all_ready=all_ready,
     )
 
+
 # API Route for JS Validation (optional, for front-end use)
-
-
+# client-side validation pattern here is custom for this project,
+# but the JSON response style follows the typical Flask + fetch pattern.
 @app.route("/api/validate", methods=["POST"])
 def api_validate():
     ensure_session_store()
@@ -380,6 +401,9 @@ def api_validate():
     return jsonify({"ok": True, "message": "Valid data"})
 
 
-# Run the Flask app in debug mode (from Flask quickstart)
+# Run the Flask app in debug mode (from Flask quickstart pattern:
+# https://flask.palletsprojects.com/en/latest/quickstart/)
 if __name__ == "__main__":
+    # making sure the sqlite table exists before the server starts
+    init_db()
     app.run(debug=True)
