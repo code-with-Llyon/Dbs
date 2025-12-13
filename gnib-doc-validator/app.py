@@ -356,6 +356,35 @@ def checklist():
         all_ready=all_ready,
     )
 
+# Admin section....
+
+# this part was created by ChatGPT for the project, following basic
+# Flask login + dashboard patterns:
+# https://flask.palletsprojects.com/en/latest/quickstart/#sessions
+
+# simple admin login for now (no users table yet)
+
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    # for now admin username/password is hard-coded
+    ADMIN_USER = "admin"
+    ADMIN_PASS = "12345"
+
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == ADMIN_USER and password == ADMIN_PASS:
+            # using Flask session, same pattern used in their docs
+            session["admin_logged_in"] = True
+            flash("Welcome, admin.", "success")
+            return redirect(url_for("admin_dashboard"))
+        else:
+            flash("Invalid admin credentials.", "danger")
+
+    return render_template("admin_login.html")
+
 
 # API Route for JS Validation (optional, for front-end use)
 # client-side validation pattern here is custom for this project,
