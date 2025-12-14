@@ -413,22 +413,51 @@ def require_admin():
 # admin dashboard route
 @app.route("/admin")
 def admin_dashboard():
-    # if not logged in, send them to login page
+    # if not logged in, redirect back to login page
     if not require_admin():
         return redirect(url_for("admin_login"))
+
+    # grabbing the optional search query from the URL (?code=XXXX)
+    # this pattern follows the typical Flask request.args usage:
+    # https://flask.palletsprojects.com/en/latest/quickstart/#accessing-request-data
+
+    search_code = request.args.get("code", "").strip()
 
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # pulling all uploads and list them in descending order.
-    cur.execute("""
-        SELECT id, application_code, purpose, category,
-               doc_type, filename, expiry_date, status, uploaded_at
-        FROM uploads
-        ORDER BY uploaded_at DESC
-    """)
+    if search_code:
+        # if admin typed a code, only pull uploads for that application_code
+        cur.execute(
+            """
+            SELECT id, application_code, purpose, category,
+                   doc_type, filename, expiry_date, status, uploaded_at
+            FROM uploads
+            WHERE application_code = ?
+            ORDER BY uploaded_at DESC
+            """,
+            (search_code,),
+        )
+    else:
+        # no search, show all uploads like before
+        cur.execute(
+            """
+            SELECT id, application_code, purpose, category,
+                   doc_type, filename, expiry_date, status, uploaded_at
+            FROM uploads
+            ORDER BY uploaded_at DESC
+            """
+        )
+
     uploads = cur.fetchall()
     conn.close()
+
+    # passing search_code into the template so we can show what was searched
+    return render_template(
+        "admin_dashboard.html",
+        uploads=uploads,
+        search_code=search_code,
+    )
 
     # this template will loop over "uploads" and show them in a table
     return render_template("admin_dashboard.html", uploads=uploads)

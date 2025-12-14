@@ -18,10 +18,8 @@
       <th>Purpose</th>
       <th>Category</th>
       <th>Document</th>
-      <th>File</th>
       <th>Expiry</th>
       <th>Status</th>
-      <th>Uploaded At</th>
       <th>Actions</th>
     </tr>
   </thead>
@@ -33,7 +31,6 @@
       <td>{{ row.purpose }}</td>
       <td>{{ row.category }}</td>
       <td>{{ row.doc_type }}</td>
-      <td>{{ row.filename }}</td>
       <td>{{ row.expiry_date or '-' }}</td>
       <td>
         {% if row.status == 'approved' %}
