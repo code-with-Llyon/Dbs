@@ -480,6 +480,52 @@ def admin_logout():
     flash("You have been logged out.", "info")
     return redirect(url_for("admin_login"))
 
+# -------- Document OCR / Recognition helper + route --------
+# this part shows how to wire a document verification API (for example OCR.Space).
+# OCR API reference: https://ocr.space/OCRAPI
+
+
+def run_ocr_on_file(stored_filename: str) -> str:
+    """Small wrapper that sends the uploaded file to OCR API and returns extracted text.
+       Note: requires OCR_SPACE_API_KEY in .env
+    """
+    if not OCR_SPACE_API_KEY:
+        # failing fast if key is missing
+        raise RuntimeError("OCR_SPACE_API_KEY is not configured in .env")
+
+    file_path = os.path.join(app.config["UPLOAD_FOLDER"], stored_filename)
+    if not os.path.exists(file_path):
+        raise FileNotFoundError("File not found on server.")
+
+    # making an HTTP POST request with the file attached
+    # requests usage follows examples from:
+    # https://requests.readthedocs.io/en/latest/user/quickstart/#post-a-multipart-encoded-file
+    with open(file_path, "rb") as f:
+        resp = requests.post(
+            "https://api.ocr.space/parse/image",
+            files={"file": f},
+            data={
+                "apikey": OCR_SPACE_API_KEY,
+                "language": "eng",
+            },
+            timeout=30,
+        )
+
+    # basic JSON parsing based on OCR.Space docs
+    data = resp.json()
+
+    if data.get("IsErroredOnProcessing"):
+        # the API returns error info in ErrorMessage or ErrorDetails
+        err = data.get("ErrorMessage") or data.get("ErrorDetails")
+        raise RuntimeError(f"OCR error from provider: {err}")
+
+    parsed_results = data.get("ParsedResults") or []
+    if not parsed_results:
+        return "No text detected in document."
+
+    # usually ParsedResults[0]['ParsedText'] holds the extracted text
+    return (parsed_results[0].get("ParsedText") or "").strip()
+
 
 # API Route for JS Validation (optional, for front-end use)
 # client-side validation pattern here is custom for this project,
