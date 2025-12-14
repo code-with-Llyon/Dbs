@@ -5,6 +5,9 @@ from werkzeug.utils import secure_filename
 import sqlite3
 import string
 import secrets
+import requests
+from dotenv import load_dotenv
+
 
 app = Flask(__name__)
 app.secret_key = "gnib-school-project-key"
