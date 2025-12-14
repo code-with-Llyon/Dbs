@@ -527,9 +527,53 @@ def run_ocr_on_file(stored_filename: str) -> str:
     return (parsed_results[0].get("ParsedText") or "").strip()
 
 
+@app.route("/admin/scan/<int:upload_id>")
+def admin_scan(upload_id):
+    """Admin-only route that runs OCR on a single uploaded document and shows the text.
+       Idea: admin can quickly see if the document looks genuine / matches expectations.
+    """
+    if not require_admin():
+        return redirect(url_for("admin_login"))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM uploads WHERE id = ?",
+        (upload_id,),
+    )
+    upload_row = cur.fetchone()
+    conn.close()
+
+    if upload_row is None:
+        flash("Upload not found.", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    if not OCR_SPACE_API_KEY:
+        flash(
+            "OCR API key is not configured. Please set OCR_SPACE_API_KEY in .env.",
+            "danger",
+        )
+        return redirect(url_for("admin_dashboard"))
+
+    try:
+        ocr_text = run_ocr_on_file(upload_row["filename"])
+        flash("OCR scan completed successfully.", "info")
+    except Exception as e:
+        ocr_text = f"OCR failed: {e}"
+        flash("There was an error while trying to scan the document.", "danger")
+
+    # admin_scan_result.html can show upload details + the extracted text nicely
+    return render_template(
+        "admin_scan_result.html",
+        upload=upload_row,
+        ocr_text=ocr_text,
+    )
+
 # API Route for JS Validation (optional, for front-end use)
 # client-side validation pattern here is custom for this project,
 # but the JSON response style follows the typical Flask + fetch pattern.
+
+
 @app.route("/api/validate", methods=["POST"])
 def api_validate():
     ensure_session_store()
