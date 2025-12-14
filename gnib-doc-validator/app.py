@@ -416,6 +416,53 @@ def admin_dashboard():
     # this template will loop over "uploads" and show them in a table
     return render_template("admin_dashboard.html", uploads=uploads)
 
+# route to approve a single document
+
+
+@app.route("/admin/approve/<int:upload_id>")
+def admin_approve(upload_id):
+    if not require_admin():
+        return redirect(url_for("admin_login"))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE uploads SET status = 'approved' WHERE id = ?",
+        (upload_id,),
+    )
+    conn.commit()
+    conn.close()
+
+    flash("Document has been approved.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+# route to reject a single document
+@app.route("/admin/reject/<int:upload_id>")
+def admin_reject(upload_id):
+    if not require_admin():
+        return redirect(url_for("admin_login"))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE uploads SET status = 'rejected' WHERE id = ?",
+        (upload_id,),
+    )
+    conn.commit()
+    conn.close()
+
+    flash("Document has been rejected.", "warning")
+    return redirect(url_for("admin_dashboard"))
+
+
+# logout route for admin
+@app.route("/admin/logout")
+def admin_logout():
+    session.pop("admin_logged_in", None)
+    flash("You have been logged out.", "info")
+    return redirect(url_for("admin_login"))
+
 
 # API Route for JS Validation (optional, for front-end use)
 # client-side validation pattern here is custom for this project,
