@@ -56,6 +56,12 @@
           class="btn btn-sm btn-danger"
           >Reject</a
         >
+        <a
+          href="{{ url_for('admin_scan', upload_id=row.id) }}"
+          class="btn btn-sm btn-outline-info"
+        >
+          Scan Document (OCR)
+        </a>
       </td>
     </tr>
     {% endfor %}
