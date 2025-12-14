@@ -384,16 +384,15 @@ def checklist():
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
-    # for now admin username/password is hard-coded
-    ADMIN_USER = "admin"
-    ADMIN_PASS = "12345"
-
+    # using ADMIN_USERNAME and ADMIN_PASSWORD loaded from .env above
+    # this is to avoid hard-coding credentials directly in the source file
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
 
-        if username == ADMIN_USER and password == ADMIN_PASS:
-            # using Flask session, same pattern used in their docs
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            # using Flask session, same pattern used in their docs:
+            # https://flask.palletsprojects.com/en/latest/quickstart/#sessions
             session["admin_logged_in"] = True
             flash("Welcome, admin.", "success")
             return redirect(url_for("admin_dashboard"))
@@ -401,6 +400,7 @@ def admin_login():
             flash("Invalid admin credentials.", "danger")
 
     return render_template("admin_login.html")
+
 
 # check if admin is logged in
 
