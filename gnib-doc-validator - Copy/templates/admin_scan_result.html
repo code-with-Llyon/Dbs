@@ -1,0 +1,15 @@
+{% extends "base.html" %} {% block content %}
+<h2>OCR Result for {{ upload.doc_type.replace('_', ' ')|title }}</h2>
+
+<p><strong>Application Code:</strong> {{ upload.application_code }}</p>
+<p><strong>File:</strong> {{ upload.filename }}</p>
+
+<hr />
+
+<h4>Extracted Text</h4>
+<pre style="white-space: pre-wrap">{{ ocr_text }}</pre>
+
+<a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">
+  Back to Dashboard
+</a>
+{% endblock %}

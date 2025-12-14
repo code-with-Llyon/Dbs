@@ -1,0 +1,99 @@
+{% extends "base.html" %} {% block content %}
+<h2>Admin Dashboard</h2>
+<form
+  class="row g-3 mb-3"
+  method="get"
+  action="{{ url_for('admin_dashboard') }}"
+>
+  <div class="col-auto">
+    <label for="code" class="col-form-label">Search by Application Code</label>
+  </div>
+  <div class="col-auto">
+    <input
+      type="text"
+      class="form-control"
+      id="code"
+      name="code"
+      placeholder="e.g. 12345678"
+      value="{{ search_code or '' }}"
+    />
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-primary mb-3">Search</button>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mb-3">
+      Clear
+    </a>
+  </div>
+</form>
+
+{% if search_code %}
+<div class="alert alert-info py-2">
+  Showing results for application code:
+  <strong>{{ search_code }}</strong>
+</div>
+{% endif %}
+
+<a href="{{ url_for('admin_logout') }}" class="btn btn-outline-secondary mb-3">
+  Logout
+</a>
+
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
+%} {% for category, msg in messages %}
+<div class="alert alert-{{ category }}">{{ msg }}</div>
+{% endfor %} {% endif %} {% endwith %}
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Application Code</th>
+      <th>Purpose</th>
+      <th>Category</th>
+      <th>Document</th>
+      <th>Expiry</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in uploads %}
+    <tr>
+      <td>{{ row.id }}</td>
+      <td>{{ row.application_code }}</td>
+      <td>{{ row.purpose }}</td>
+      <td>{{ row.category }}</td>
+      <td>{{ row.doc_type }}</td>
+      <td>{{ row.expiry_date or '-' }}</td>
+      <td>
+        {% if row.status == 'approved' %}
+        <span class="badge bg-success">Approved</span>
+        {% elif row.status == 'rejected' %}
+        <span class="badge bg-danger">Rejected</span>
+        {% else %}
+        <span class="badge bg-secondary">Pending</span>
+        {% endif %}
+      </td>
+      <td>{{ row.uploaded_at }}</td>
+      <td>
+        <a
+          href="{{ url_for('admin_approve', upload_id=row.id) }}"
+          class="btn btn-sm btn-success"
+          >Approve</a
+        >
+        <a
+          href="{{ url_for('admin_reject', upload_id=row.id) }}"
+          class="btn btn-sm btn-danger"
+          >Reject</a
+        >
+        <a
+          href="{{ url_for('admin_scan', upload_id=row.id) }}"
+          class="btn btn-sm btn-outline-info"
+        >
+          Scan Document (OCR)
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
