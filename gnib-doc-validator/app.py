@@ -72,7 +72,21 @@ OPTIONAL_DOCS = {"scholarship_proof"}
 # https://docs.python.org/3/library/sqlite3.html)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# loading .env from the same directory as app.py
+# this keeps admin credentials + API keys outside the code file
+# reference: this approach is taken from common Flask + python-dotenv setups
+# and general 12-factor app config practices.
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+
 DB_PATH = os.path.join(BASE_DIR, "gnib_uploads.db")
+
+# reading admin login details and OCR key from environment variables
+
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+# will be used later for document/OCR scanning
+OCR_SPACE_API_KEY = os.getenv("OCR_SPACE_API_KEY")
 
 
 def get_db_connection():
