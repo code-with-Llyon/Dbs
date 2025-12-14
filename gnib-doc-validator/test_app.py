@@ -25,4 +25,4 @@ class TestPassportExpiry(unittest.TestCase):
 
     def test_expired_passport(self):
         past_date = (datetime.today() - timedelta(days=365)
-                     ).s
+                     )
