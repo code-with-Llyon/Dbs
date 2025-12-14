@@ -1,0 +1,64 @@
+{% extends "base.html" %} {% block content %}
+<h2>Admin Dashboard</h2>
+
+<a href="{{ url_for('admin_logout') }}" class="btn btn-outline-secondary mb-3">
+  Logout
+</a>
+
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
+%} {% for category, msg in messages %}
+<div class="alert alert-{{ category }}">{{ msg }}</div>
+{% endfor %} {% endif %} {% endwith %}
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Application Code</th>
+      <th>Purpose</th>
+      <th>Category</th>
+      <th>Document</th>
+      <th>File</th>
+      <th>Expiry</th>
+      <th>Status</th>
+      <th>Uploaded At</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in uploads %}
+    <tr>
+      <td>{{ row.id }}</td>
+      <td>{{ row.application_code }}</td>
+      <td>{{ row.purpose }}</td>
+      <td>{{ row.category }}</td>
+      <td>{{ row.doc_type }}</td>
+      <td>{{ row.filename }}</td>
+      <td>{{ row.expiry_date or '-' }}</td>
+      <td>
+        {% if row.status == 'approved' %}
+        <span class="badge bg-success">Approved</span>
+        {% elif row.status == 'rejected' %}
+        <span class="badge bg-danger">Rejected</span>
+        {% else %}
+        <span class="badge bg-secondary">Pending</span>
+        {% endif %}
+      </td>
+      <td>{{ row.uploaded_at }}</td>
+      <td>
+        <a
+          href="{{ url_for('admin_approve', upload_id=row.id) }}"
+          class="btn btn-sm btn-success"
+          >Approve</a
+        >
+        <a
+          href="{{ url_for('admin_reject', upload_id=row.id) }}"
+          class="btn btn-sm btn-danger"
+          >Reject</a
+        >
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
