@@ -135,6 +135,18 @@ def allowed_file(filename: str) -> bool:
     ext = filename.rsplit(".", 1)[1].lower()
     return ext in ALLOWED_EXTENSIONS
 
+# simple helper to validate passport expiry date, used for unit tests
+
+
+def passport_is_valid(date_str: str) -> bool:
+    try:
+        exp = datetime.strptime(date_str, "%Y-%m-%d").date()
+        # passport is valid only if expiry date is in the future
+        return exp > datetime.today().date()
+    except Exception:
+        # if the format is wrong or parsing fails, we treat it as invalid
+        return False
+
 
 def get_required_docs(purpose: str, category: str):
     """small helper to safely read required docs from DOC_MAP"""
